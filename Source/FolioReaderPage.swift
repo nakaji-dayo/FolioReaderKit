@@ -170,6 +170,11 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             scrollPageToBottom()
         }
         
+        print(pageScrollDirection, direction, isScrolling)
+        if pageScrollDirection == .left && FolioReader.isJaRTL {
+            scrollPageToBottom()
+        }
+        
         UIView.animate(withDuration: 0.2, animations: {webView.alpha = 1}, completion: { finished in
             webView.isColors = false
             self.webView.createMenu(options: false)

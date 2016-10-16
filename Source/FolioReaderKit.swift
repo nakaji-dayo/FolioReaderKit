@@ -90,6 +90,10 @@ open class FolioReader: NSObject {
         return book.spine.isRtl && readerConfig.scrollDirection == .horizontal
     }
     
+    static var isJaRTL: Bool {
+        return book.spine.isRtl && readerConfig.scrollDirection == .horizontalWithVerticalContent
+    }
+    
     /// Check if current theme is Night mode
     open static var nightMode: Bool {
         get { return FolioReader.defaults.bool(forKey: kNightMode) }

@@ -94,6 +94,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     init() {
         super.init(nibName: nil, bundle: Bundle.frameworkBundle())
         initialization()
+        self.view.backgroundColor = UIColor.red;
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -265,6 +266,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         collectionView.reloadData()
         configureNavBarButtons()
         setCollectionViewProgressiveDirection()
+        setForceRTL()
         
         if let position = FolioReader.defaults.value(forKey: kBookId) as? NSDictionary,
             let pageNumber = position["pageNumber"] as? Int , pageNumber > 0 {
@@ -292,6 +294,24 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             page.transform = CGAffineTransform(scaleX: -1, y: 1)
         } else {
             page.transform = CGAffineTransform.identity
+        }
+    }
+    
+    func setForceRTL() {
+        if FolioReader.isJaRTL {
+            if #available(iOS 9.0, *) {
+                collectionView.semanticContentAttribute = .forceRightToLeft
+            } else {
+                // Fallback on earlier versions
+                NSLog("iOS 9.0 未満はサポートしない")
+            }
+        } else {
+            if #available(iOS 9.0, *) {
+                collectionView.semanticContentAttribute = .unspecified
+            } else {
+                // Fallback on earlier versions
+                NSLog("iOS 9.0 未満はサポートしない")
+            }
         }
     }
 
@@ -1006,7 +1026,12 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             }
         }
         
-        pageScrollDirection = scrollView.contentOffset.forDirection() < pointNow.forDirection() ? .negative() : .positive()
+        if FolioReader.isJaRTL {
+            pageScrollDirection = scrollView.contentOffset.x < pointNow.x ? .positive() : .negative()
+            
+        } else {
+            pageScrollDirection = scrollView.contentOffset.forDirection() < pointNow.forDirection() ? .negative() : .positive()
+        }
     }
     
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
