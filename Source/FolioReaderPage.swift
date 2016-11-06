@@ -57,6 +57,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             webView.backgroundColor = UIColor.clear
             
             //
+            // let viewport = book.metadata.findMetaByName("viewport")
             // webView.scalesPageToFit = true
             
             self.contentView.addSubview(webView)
@@ -112,6 +113,14 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     func loadHTMLString(_ htmlContent: String!, baseURL: URL!) {
 		// Insert the stored highlights to the HTML
 		let tempHtmlContent = htmlContentWithInsertHighlights(htmlContent)
+        // viewportが使われていれば、ピンチ可能にする
+        let viewport = htmlContent.range(of: "name=\"viewport\"")
+        if viewport != nil {
+            webView.scalesPageToFit = true
+        } else {
+            webView.scalesPageToFit = false
+        }
+
         // Load the html into the webview
         webView.alpha = 0
         webView.loadHTMLString(tempHtmlContent, baseURL: baseURL)
