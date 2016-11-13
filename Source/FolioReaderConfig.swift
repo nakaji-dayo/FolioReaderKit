@@ -146,6 +146,17 @@ open class FolioReaderConfig: NSObject {
     /// Enable TTS (Text To Speech)
     open var enableTTS = true
     
+    // フォントの設定
+    open var enableFont = true
+    // charperボタンを右に表示
+    open var setTOCToRight = false
+    // ハイライトを利用
+    open var enableHighlight = true
+    // 下部にページ番号を表示
+    open var enablePageIndicator = true
+    // 縦方向のスクロールインディケーターを表示
+    open var enableScrollIndicator = true
+    
     // MARK: Quote image share
     
     /// Custom Quote logo

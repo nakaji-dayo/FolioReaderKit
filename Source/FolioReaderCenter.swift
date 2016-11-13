@@ -164,16 +164,20 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         configureNavBar()
 
 		// Page indicator view
-		pageIndicatorView = FolioReaderPageIndicator(frame: self.frameForPageIndicatorView())
-		if let pageIndicatorView = pageIndicatorView {
-			view.addSubview(pageIndicatorView)
-		}
+        if readerConfig.enablePageIndicator {
+            pageIndicatorView = FolioReaderPageIndicator(frame: self.frameForPageIndicatorView())
+            if let pageIndicatorView = pageIndicatorView {
+                view.addSubview(pageIndicatorView)
+            }
+        }
 
-		scrollScrubber = ScrollScrubber(frame: self.frameForScrollScrubber())
-		scrollScrubber?.delegate = self
-		if let scrollScrubber = scrollScrubber {
-			view.addSubview(scrollScrubber.slider)
-		}
+        if readerConfig.enableScrollIndicator {
+            scrollScrubber = ScrollScrubber(frame: self.frameForScrollScrubber())
+            scrollScrubber?.delegate = self
+            if let scrollScrubber = scrollScrubber {
+                view.addSubview(scrollScrubber.slider)
+            }
+        }
     }
     
     override open func viewWillAppear(_ animated: Bool) {
@@ -240,7 +244,11 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
         let toc = UIBarButtonItem(image: tocIcon, style: .plain, target: self, action:#selector(presentChapterList(_:)))
         
-        navigationItem.leftBarButtonItems = [menu, toc]
+        if readerConfig.setTOCToRight {
+            navigationItem.leftBarButtonItems = [menu]
+        } else {
+            navigationItem.leftBarButtonItems = [menu, toc]
+        }
         
         var rightBarIcons = [UIBarButtonItem]()
 
@@ -255,7 +263,14 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let font = UIBarButtonItem(image: fontIcon, style: .plain, target: self, action: #selector(presentFontsMenu))
         font.width = space
         
+        if readerConfig.enableFont {
         rightBarIcons.append(contentsOf: [font])
+        }
+        
+        if readerConfig.setTOCToRight {
+            rightBarIcons.append(toc)
+        }
+        
         navigationItem.rightBarButtonItems = rightBarIcons
     }
 
@@ -276,6 +291,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
         
         currentPageNumber = 1
+        if FolioReader.isJaRTL {
+            // 右から読む場合移動が必要
+            changePageWith(page: currentPageNumber)
+        }
     }
     
     // MARK: Change page progressive direction
@@ -1085,13 +1104,19 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         chapter.delegate = self
         let highlight = FolioReaderHighlightList()
         
-        let pageController = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options:nil)
-        pageController.viewControllerOne = chapter
-        pageController.viewControllerTwo = highlight
-        pageController.segmentedControlItems = [readerConfig.localizedContentsTitle, readerConfig.localizedHighlightsTitle]
+        if readerConfig.enableHighlight {
+            let pageController = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options:nil)
+            pageController.viewControllerOne = chapter
+            pageController.viewControllerTwo = highlight
+            pageController.segmentedControlItems = [readerConfig.localizedContentsTitle, readerConfig.localizedHighlightsTitle]
+            let nav = UINavigationController(rootViewController: pageController)
+            present(nav, animated: true, completion: nil)
+        } else {
+            let nav = UINavigationController(rootViewController: chapter)
+            chapter.setCloseButton()
+            present(nav, animated: true, completion: nil)
+        }
         
-        let nav = UINavigationController(rootViewController: pageController)
-        present(nav, animated: true, completion: nil)
     }
     
     /**
@@ -1177,6 +1202,11 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         } else if isFirstLoad {
             updateCurrentPage(page)
             isFirstLoad = false
+            
+            if FolioReader.isJaRTL {
+                // jaRTLの場合初回表示時に右端にスクロール
+                page.scrollPageToBottom()
+            }
         }
         
         // Go to fragment if needed
